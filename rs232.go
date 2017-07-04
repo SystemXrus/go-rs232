@@ -44,6 +44,7 @@ type SerConf int
 
 const (
 	S_8N1 SerConf = iota
+	S_8N1X
 	S_7E1
 	S_7O1
 )
@@ -77,6 +78,10 @@ func OpenPort(port string, baudRate int, serconf SerConf) (*SerialPort, error) {
 		defer f.Close()
 		return nil, fmt.Errorf("cfsetospeed failed")
 	}
+
+	// raw mode
+	C.cfmakeraw(&options)
+
 	switch serconf {
 	case S_8N1:
 		{
@@ -84,6 +89,15 @@ func OpenPort(port string, baudRate int, serconf SerConf) (*SerialPort, error) {
 			options.c_cflag &^= C.CSTOPB
 			options.c_cflag &^= C.CSIZE
 			options.c_cflag |= C.CS8
+		}
+	case S_8N1X:
+		{
+			options.c_cflag &^= C.PARENB
+			options.c_cflag &^= C.CSTOPB
+			options.c_cflag &^= C.CSIZE
+			options.c_cflag |= C.CS8
+			options.c_cflag |= C.IXON
+			options.c_cflag |= C.IXOFF
 		}
 	case S_7E1:
 		{
